@@ -13,9 +13,17 @@ export class RescueSpotDataStack extends cdk.Stack {
     // S3 バケット作成
     const backupBucket = new s3.Bucket(this, 'RescueSpotDataBucket', {
       bucketName: 'rescue-spot-data-bucket',
+      versioned: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
-      encryption: s3.BucketEncryption.S3_MANAGED,
+      lifecycleRules: [
+        {
+          abortIncompleteMultipartUploadAfter: cdk.Duration.days(1), // 未完了のマルチパートアップロードを1日後に削除
+          expiredObjectDeleteMarker: true, // 期限切れの削除マーカーを削除
+          noncurrentVersionExpiration: cdk.Duration.days(7), // 非現行バージョンを7日後に削除
+        },
+      ],
     });
 
     // Lambda 関数作成
